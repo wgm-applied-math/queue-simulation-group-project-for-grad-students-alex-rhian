@@ -73,6 +73,8 @@ classdef ServiceQueue < handle
         % currently waiting, how many are currently being served, and how
         % many have been served.
         Log;
+
+        Renegeing;
     
     end
 
@@ -113,15 +115,16 @@ classdef ServiceQueue < handle
             obj.Events = PriorityQueue({}, @(x) x.Time);
             obj.Waiting = {};
             obj.Served = {};
+            obj.Renegeing = {};
             obj.Log = table( ...
-                Size=[0, 4], ...
+                Size=[0, 5], ...
                 VariableNames=...
-                    {'Time', 'NWaiting', 'NInService', 'NServed'}, ...
+                    {'Time', 'NWaiting', 'NInService', 'NServed', 'NRenege'}, ...
                 VariableTypes=...
-                    {'double', 'int64', 'int64', 'int64'});
+                    {'double', 'int64', 'int64', 'int64','int64'});
 
             % The first event is to record the state at time 0 to the log.
-            schedule_event(obj, RecordToLog(0));
+            schedule_event(obj, RecordToLog(obj.LogInterval));
         end
 
         function obj = run_until(obj, MaxTime)
@@ -168,6 +171,7 @@ classdef ServiceQueue < handle
         end
 
         function handle_arrival(obj, arrival)
+            % Assign each arrival a random time at which they will renege 
             % handle_arrival Handle an Arrival event.
             %
             % handle_arrival(obj, arrival) - Handle an Arrival event.  Add
@@ -182,9 +186,13 @@ classdef ServiceQueue < handle
             c = arrival.Customer;
             c.ArrivalTime = obj.Time;
 
+            RenegeTime = exprnd(4);
+           % obj.Renegeing{end +1} = obj.RenegeTime;
+
+          
             % The Customer is appended to the list of waiting customers.
             obj.Waiting{end+1} = c;
-
+        
             % Construct the next Customer that will arrive.
             % Its Id is one higher than the one that just arrived.
             next_customer = Customer(c.Id + 1);
@@ -198,7 +206,10 @@ classdef ServiceQueue < handle
             next_arrival = ...
                 Arrival(obj.Time + inter_arrival_time, next_customer);
             schedule_event(obj, next_arrival);
-
+            
+            schedule_event(obj,Renege (obj.Time+RenegeTime, c.Id));
+       
+            
             % Check to see if any customers can advance.
             advance(obj);
         end
@@ -224,6 +235,28 @@ classdef ServiceQueue < handle
             % Check to see if any customers can advance.
             advance(obj);
         end
+        
+        %Here is where we figure out if a customer is in the queue, or if
+        %they are being served/ have been served when their alarm goes off
+        %They will renege if CurrentTime-ArrivalTime >= RenegeTime
+        %when a reneg event happens, look for the customer whose id matches
+        %the time the alarm went off 
+        function handle_renege(obj,renege)
+        
+        %next_renege = Renege(RenegeTime + obj.Time, c.Id);
+        
+        for  i= 1:length(obj.Waiting)
+            c= obj.Waiting{i};
+            if c.Id == renege.Id
+                obj.Waiting(i) =[];
+                obj.Renegeing{end+1}=c;
+                c.RenegeTime= renege.Time;
+                break;
+            end
+        end
+
+        
+        end 
 
         function begin_serving(obj, j, customer)
             % begin_serving Begin serving the given customer at station j.
@@ -299,9 +332,9 @@ classdef ServiceQueue < handle
             NWaiting = length(obj.Waiting);
             NInService = obj.NumServers - sum(obj.ServerAvailable);
             NServed = length(obj.Served);
-
+            NRenege = length(obj.Renegeing);
             % MATLAB-ism: This is how to add a row to the end of a table.
-            obj.Log(end+1, :) = {obj.Time, NWaiting, NInService, NServed};
+            obj.Log(end+1, :) = {obj.Time, NWaiting, NInService, NServed, NRenege};
         end
     end
 end

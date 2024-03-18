@@ -12,6 +12,8 @@ max_time = 1000;
 % Record how many customers are in the system at the end of each sample.
 NInSystemSamples = cell([1, n_samples]);
 
+rng('default')
+
 %% Run the queue simulation
 
 % The statistics seem to come out a little weird if the log interval is too
@@ -47,16 +49,22 @@ NInSystem = vertcat(NInSystemSamples{:});
 % f(*args).
 
 %% Make a picture
+fig1= figure();
+t1=tiledlayout(1,1);
+ax1= nexttile(t1);
 
 % Start with a histogram.  The result is an empirical PDF, that is, the
 % area of the bar at horizontal index n is proportional to the fraction of
 % samples for which there were n customers in the system.
-h = histogram(NInSystem, Normalization="probability", BinMethod="integers");
-
+h = histogram(ax1,NInSystem, Normalization="probability", BinMethod="integers");
+hold(ax1,'on')
+theoryprob= [0.527169,0.351446,0.10041,0.01825,0.00243,0.00025]
+xvaluesshifted = [0,1,2,3,4,5]
+plot(ax1, xvaluesshifted,theoryprob,'o')
 % MATLAB-ism: Once you've created a picture, you can use "hold on" to cause
 % further plotting function to work with the same picture rather than
 % create a new one.
-hold on;
+%hold on;
 
 % For comparison, plot the theoretical results for a M/M/1 queue.
 % The agreement isn't all that good unless you run for a long time, say
@@ -71,6 +79,64 @@ for n = 1:nMax
     P(1+n) = P0 * rho^n;
 end
 plot(ns, P, 'o', MarkerEdgeColor='k', MarkerFaceColor='r');
+
+
+%Generate a histogram for the total time customers spend in the system 
+%TotalTime= DepartureTime - ArrivalTime;
+%Do we also need to consider RenegeTime-ArrivalTime???
+%TotalCustomers=length(q.Served)+length(q.Renegeing)
+for i = 1:length(q.Served)
+        TotalTimeS(i) = q.Served{i}.DepartureTime - q.Served{i}.ArrivalTime;
+end
+
+for i = 1:length(q.Renegeing)
+        TotalTimeR(i) = q.Renegeing{i}.RenegeTime - q.Renegeing{i}.ArrivalTime;
+end
+TotalTime=[TotalTimeS,TotalTimeR]
+fig2= figure();
+t2= tiledlayout(fig2,1,1);
+ax2= nexttile(t2);
+time = histogram(ax2,TotalTime, Normalization= 'probability',BinMethod='auto');
+
+%Generate a hisogram for the time the customers spend waiting in the queue
+%BeginService-ArrivalTime
+for i = 1:length(q.Served)
+        WaitTimeS(i) = q.Served{i}.BeginServiceTime - q.Served{i}.ArrivalTime;
+end
+
+for i = 1:length(q.Renegeing)
+        WaitTimeR(i) = q.Renegeing{i}.RenegeTime - q.Renegeing{i}.ArrivalTime;
+end
+WaitTime=[WaitTimeS,WaitTimeR]
+
+fig3= figure();
+t3= tiledlayout(fig3,1,1);
+ax3= nexttile(t3);
+w = histogram(ax3,WaitTime, Normalization= 'probability', BinMethod= 'auto');
+
+%Generate a histogram for the time the customers spend being served 
+%DepartureTime-BeginServiceTime 
+for i = 1:length(q.Served)
+        ServeTime(i) = q.Served{i}.DepartureTime - q.Served{i}.BeginServiceTime;
+end
+fig4= figure();
+t4= tiledlayout(fig4,1,1);
+ax4= nexttile(t4);
+s = histogram(ax4,ServeTime, Normalization= 'probability', BinMethod= 'auto');
+
+
+
+%Generate a histogram for the probability that m customers renege during an
+%8 hour shift
+
+%r =histogram(NRenege, Normalization="probability", BinMethod="integers");
+
+
+
+
+
+
+
 
 % This sets some paper-related properties of the figure so that you can
 % save it as a PDF and it doesn't fill a whole page.
