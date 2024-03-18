@@ -7,12 +7,12 @@ classdef ServiceQueue < handle
         % ArrivalRate - Customers arrive according to a Poisson process.
         % The inter-arrival time is exponentially distributed with a rate
         % parameter of ArrivalRate.
-        ArrivalRate = 0.5;
+        ArrivalRate = 2;
 
         % DepartureRate - When a customer arrives, the time it takes for
         % them to be served is exponentially distributed with a rate
         % parameter of DepartureRate.
-        DepartureRate = 1/1.5;
+        DepartureRate = 3;
 
         % NumServers - How many identical serving stations are available.
         NumServers = 1;
@@ -75,6 +75,10 @@ classdef ServiceQueue < handle
         Log;
 
         Renegeing;
+
+
+        Prob;
+
     
     end
 
@@ -116,12 +120,14 @@ classdef ServiceQueue < handle
             obj.Waiting = {};
             obj.Served = {};
             obj.Renegeing = {};
+            obj.Prob = {};
             obj.Log = table( ...
-                Size=[0, 5], ...
+                Size=[0, 6], ...
                 VariableNames=...
-                    {'Time', 'NWaiting', 'NInService', 'NServed', 'NRenege'}, ...
+                    {'Time', 'NWaiting', 'NInService', 'NServed', 'NRenege', 'NProb'}, ...
                 VariableTypes=...
-                    {'double', 'int64', 'int64', 'int64','int64'});
+                    {'double', 'int64', 'int64', 'int64', 'int64', 'int64'});
+
 
             % The first event is to record the state at time 0 to the log.
             schedule_event(obj, RecordToLog(obj.LogInterval));
@@ -186,13 +192,26 @@ classdef ServiceQueue < handle
             c = arrival.Customer;
             c.ArrivalTime = obj.Time;
 
-            RenegeTime = exprnd(4);
+
+
            % obj.Renegeing{end +1} = obj.RenegeTime;
 
           
             % The Customer is appended to the list of waiting customers.
             obj.Waiting{end+1} = c;
         
+
+            % People need to set their watch here to randomly go off when 
+            % they will renege, this is exponentially distributed 
+            % 1/theta = 4
+
+           RenegeTime = exprnd(4);
+           
+
+            % The Customer is appended to the list of waiting customers.
+            obj.Waiting{end + 1} = c;
+
+
             % Construct the next Customer that will arrive.
             % Its Id is one higher than the one that just arrived.
             next_customer = Customer(c.Id + 1);
@@ -206,10 +225,10 @@ classdef ServiceQueue < handle
             next_arrival = ...
                 Arrival(obj.Time + inter_arrival_time, next_customer);
             schedule_event(obj, next_arrival);
-            
-            schedule_event(obj,Renege (obj.Time+RenegeTime, c.Id));
-       
-            
+                   
+            schedule_event(obj,Renege (obj.Time + RenegeTime, c.Id));
+
+
             % Check to see if any customers can advance.
             advance(obj);
         end
@@ -227,6 +246,7 @@ classdef ServiceQueue < handle
 
             % Add this Customer object to the end of Served.
             obj.Served{end+1} = customer;
+            obj.Prob{end + 1} = 0;
 
             % Empty this service station and mark that it is available.
             obj.Servers{j} = false;
@@ -241,22 +261,27 @@ classdef ServiceQueue < handle
         %They will renege if CurrentTime-ArrivalTime >= RenegeTime
         %when a reneg event happens, look for the customer whose id matches
         %the time the alarm went off 
-        function handle_renege(obj,renege)
-        
-        %next_renege = Renege(RenegeTime + obj.Time, c.Id);
-        
-        for  i= 1:length(obj.Waiting)
-            c= obj.Waiting{i};
-            if c.Id == renege.Id
-                obj.Waiting(i) =[];
-                obj.Renegeing{end+1}=c;
-                c.RenegeTime= renege.Time;
-                break;
-            end
-        end
+  
 
-        
-        end 
+        function handle_renege(obj, renege)
+            
+            %Here is where we figure out if a customer is in the queue or
+            %if they are being served/have been served when their alarm
+            %goes off.
+            
+         for i = 1:length(obj.Waiting)
+             c = obj.Waiting{i};
+             if c.Id == renege.Id
+                obj.Waiting(i) = [];
+                obj.Renegeing{end + 1} = c;
+                obj.Prob{end + 1} = 1;
+                c.RenegeTime = renege.Time;          
+                break;
+             end   
+
+         end
+
+        end
 
         function begin_serving(obj, j, customer)
             % begin_serving Begin serving the given customer at station j.
@@ -333,8 +358,13 @@ classdef ServiceQueue < handle
             NInService = obj.NumServers - sum(obj.ServerAvailable);
             NServed = length(obj.Served);
             NRenege = length(obj.Renegeing);
+
+            % MATLAB-ism: This is how to add a row to the end of a table
+
+            NProb = length(obj.Prob);
+
             % MATLAB-ism: This is how to add a row to the end of a table.
-            obj.Log(end+1, :) = {obj.Time, NWaiting, NInService, NServed, NRenege};
+            obj.Log(end+1, :) = {obj.Time, NWaiting, NInService, NServed, NRenege, NProb};
         end
     end
 end

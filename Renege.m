@@ -3,15 +3,27 @@ classdef Renege < Event
     % Customer.
 
     properties
+
         % ID of the customer that reneges- their alarm has gone off!
         % remove from queue if they have NOT been served, if they are being
         % served or have already been served then do nothing 
+
+        % ServerIndex - Index of the service station from which the
+        % departure occurred
+        % We need to change this to check the person's idea to see if when
+        % their alarm goes off, are they still in line?
+
         Id;
     end
     methods
         function obj = Renege(Time, Id)
+
             % Departure - Construct a renege event from a time and
             % customer Id.
+
+            % Departure - Construct a departure event from a time and
+            % server index.
+ 
             arguments
                 Time = 0.0;
                 Id = 0;
