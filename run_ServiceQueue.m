@@ -71,7 +71,7 @@ Rh = histogram(axr, R, Normalization = "probability", BinMethod = "auto");
 % samples for which there were n customers in the system.
 
 fig1 = figure();
-t1 = tiledlayout(fig1,1,1);
+t1 = tiledlayout(1,1);
 ax1 = nexttile(t1);
 h = histogram(ax1, NInSystem, Normalization="probability", BinMethod="integers");
 hold(ax1,'on')
@@ -83,13 +83,6 @@ plot(ax1, xvaluesshifted,theoryprob,'o')
 % MATLAB-ism: Once you've created a picture, you can use "hold on" to cause
 % further plotting function to work with the same picture rather than
 % create a new one.
-%hold on;
-
-% MATLAB-ism: Once you've created a picture, you can use "hold on" to cause
-% further plotting function to work with the same picture rather than
-% create a new one.
-
-
 
 % For comparison, plot the theoretical results for a M/M/1 queue.
 % The agreement isn't all that good unless you run for a long time, say
@@ -103,36 +96,49 @@ P(1) = P0;
 for n = 1:nMax
     P(1+n) = P0 * rho^n;
 end
-plot(ns, P, 'o', MarkerEdgeColor='k', MarkerFaceColor='r');
+plot(ax1, ns, P, 'o', MarkerEdgeColor='k', MarkerFaceColor='r');
 
 
 %Generate a histogram for the total time customers spend in the system 
 %TotalTime= DepartureTime - ArrivalTime;
 %Do we also need to consider RenegeTime-ArrivalTime???
 %TotalCustomers=length(q.Served)+length(q.Renegeing)
-for i = 1:length(q.Served)
-        TotalTimeS(i) = q.Served{i}.DepartureTime - q.Served{i}.ArrivalTime;
+
+TotalTimeS = zeros(1, length(q.Served));
+qlength = length(q.Prob);
+
+for n = 1:length(q.Served)
+        TotalTimeS(1, n) = q.Served{1, n}.DepartureTime - q.Served{1, n}.ArrivalTime;
 end
 
-for i = 1:length(q.Renegeing)
-        TotalTimeR(i) = q.Renegeing{i}.RenegeTime - q.Renegeing{i}.ArrivalTime;
+TotalTimeR = zeros(1, length(q.Renegeing));
+for n = 1:length(q.Renegeing)
+        TotalTimeR(1,n) = q.Renegeing{1,n}.RenegeTime - q.Renegeing{1,n}.ArrivalTime;
 end
 
 TotalTime = [TotalTimeS,TotalTimeR];
+
 fig2 = figure();
 t2 = tiledlayout(fig2,1,1);
 ax2 = nexttile(t2);
-time = histogram(ax2,TotalTime, Normalization = 'probability',BinMethod ='auto');
+
+time = histogram(ax2, TotalTime, Normalization = 'probability',BinMethod ='auto');
+
 
 %Generate a hisogram for the time the customers spend waiting in the queue
 %BeginService-ArrivalTime
-for i = 1:length(q.Served)
-        WaitTimeS(i) = q.Served{i}.BeginServiceTime - q.Served{i}.ArrivalTime;
+
+WaitTimeS = zeros(1, length(q.Served));
+for n = 1:length(q.Served)
+        WaitTimeS(1, n) = q.Served{1,n}.BeginServiceTime - q.Served{1,n}.ArrivalTime;
 end
 
-for i = 1:length(q.Renegeing)
-        WaitTimeR(i) = q.Renegeing{i}.RenegeTime - q.Renegeing{i}.ArrivalTime;
+WaitTimeR = zeros(1, length(q.Renegeing));
+
+for n = 1:length(q.Renegeing)
+        WaitTimeR(1,n) = q.Renegeing{1,n}.RenegeTime - q.Renegeing{1,n}.ArrivalTime;
 end
+
 WaitTime = [WaitTimeS,WaitTimeR];
 
 fig3 = figure();
@@ -140,16 +146,19 @@ t3 = tiledlayout(fig3,1,1);
 ax3 = nexttile(t3);
 w = histogram(ax3,WaitTime, Normalization= 'probability', BinMethod= 'auto');
 
+
 %Generate a histogram for the time the customers spend being served 
 %DepartureTime-BeginServiceTime 
-for i = 1:length(q.Served)
-        ServeTime(i) = q.Served{i}.DepartureTime - q.Served{i}.BeginServiceTime;
+
+ServeTime = zeros(1, length(q.Served));
+for n = 1:length(q.Served)
+        ServeTime(1, n) = q.Served{1, n}.DepartureTime - q.Served{1, n}.BeginServiceTime;
 end
+
 fig4 = figure();
 t4 = tiledlayout(fig4,1,1);
 ax4 = nexttile(t4);
-s = histogram(ax4,ServeTime, Normalization= 'probability', BinMethod= 'auto');
-
+s = histogram(ax4, ServeTime, Normalization= 'probability', BinMethod= 'auto');
 
 
 % This sets some paper-related properties of the figure so that you can
