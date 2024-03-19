@@ -4,13 +4,14 @@
 %% Set up
 
 % Set up to run 100 samples of the queue.
-n_samples = 100;
+n_samples = 1000;
 
 % Each sample is run up to a maximum time of 1000.
-max_time = 1000;
+max_time = 8*60;
 
 % Record how many customers are in the system at the end of each sample.
 NInSystemSamples = cell([1, n_samples]);
+R = zeros(1, n_samples);
 
 rng('default')
 
@@ -21,7 +22,7 @@ rng('default')
 % the log interval should be long enough for several arrival and departure
 % events happen.
 for sample_num = 1:n_samples
-    q = ServiceQueue(LogInterval = 100);
+    q = ServiceQueue(LogInterval = 120);
     q.schedule_event(Arrival(1, Customer(1)));
     run_until(q, max_time);
     % Pull out samples of the number of customers in the queue system. Each
@@ -29,6 +30,7 @@ for sample_num = 1:n_samples
     % counts, because tables like q.Log allow easy extraction of whole
     % columns like this.
     NInSystemSamples{sample_num} = q.Log.NWaiting + q.Log.NInService;
+    R(sample_num) = sum(q.Prob);
 end
 
 % Join all the samples. "vertcat" is short for "vertical concatenate",
@@ -50,13 +52,6 @@ NInSystem = vertcat(NInSystemSamples{:});
 
 %% Make a picture
 
-
-totallength = length(q.Prob);
-
-R = zeros(1, totallength);
-for n = 1:totallength
-    R(1, n) = q.Prob{1, n};
-end
 
 figr = figure();
 tr = tiledlayout(figr, 1, 1);
@@ -97,6 +92,9 @@ for n = 1:nMax
 end
 plot(ax1, ns, P, 'o', MarkerEdgeColor='k', MarkerFaceColor='r');
 
+
+
+%% Next section
 
 %Generate a histogram for the total time customers spend in the system 
 %TotalTime= DepartureTime - ArrivalTime;
@@ -161,13 +159,3 @@ ax4 = nexttile(t4);
 hold(ax4, 'on');
 s = histogram(ax4, ServeTime, Normalization= 'probability', BinMethod= 'auto');
 
-
-% This sets some paper-related properties of the figure so that you can
-% save it as a PDF and it doesn't fill a whole page.
-% gcf is "get current figure handle"
-% See https://stackoverflow.com/a/18868933/2407278
-fig = gcf;
-fig.Units = 'inches';
-screenposition = fig.Position;
-fig.PaperPosition = [0 0 screenposition(3:4)];
-fig.PaperSize = [screenposition(3:4)];

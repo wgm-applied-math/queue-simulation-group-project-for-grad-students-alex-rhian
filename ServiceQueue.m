@@ -120,7 +120,7 @@ classdef ServiceQueue < handle
             obj.Waiting = {};
             obj.Served = {};
             obj.Renegeing = {};
-            obj.Prob = {};
+            obj.Prob = [];
             obj.Log = table( ...
                 Size=[0, 6], ...
                 VariableNames=...
@@ -129,7 +129,7 @@ classdef ServiceQueue < handle
                     {'double', 'int64', 'int64', 'int64', 'int64', 'int64'});
 
 
-            % The first event is to record the state at time 0 to the log.
+            % The first event is to record the state to the log.
             schedule_event(obj, RecordToLog(obj.LogInterval));
         end
 
@@ -201,7 +201,7 @@ classdef ServiceQueue < handle
             % they will renege, this is exponentially distributed 
             % 1/theta = 4
 
-             RenegeTime = exprnd(1/15);
+             RenegeTime = exprnd(15);
            
 
             % The Customer is appended to the list of waiting customers.
@@ -242,7 +242,7 @@ classdef ServiceQueue < handle
 
             % Add this Customer object to the end of Served.
             obj.Served{end + 1} = customer;
-            obj.Prob{end + 1} = 0;
+            obj.Prob(end + 1) = 0;
 
             % Empty this service station and mark that it is available.
             obj.Servers{j} = false;
@@ -266,11 +266,11 @@ classdef ServiceQueue < handle
             %goes off.
        
          for i = 1:length(obj.Waiting)
-             c = obj.Waiting{i};
+             c = obj.Waiting{i};       
              if c.Id == renege.Id                 
                 obj.Waiting(i) = [];
                 obj.Renegeing{end + 1} = c;
-                obj.Prob{end + 1} = 1;
+                obj.Prob(end + 1) = 1;
                 c.RenegeTime = renege.Time;                     
                 break;
              end   

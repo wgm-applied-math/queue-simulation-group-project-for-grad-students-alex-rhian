@@ -7,7 +7,7 @@ classdef PriorityQueue < handle
     % built into MATLAB, I'm just using a cell array and sorting it each
     % time a new element is inserted or removed.
 
-    properties (GetAccess=private)
+    properties (SetAccess=private)
         Elements = {};
         SortFeature = @(x) x;
     end
