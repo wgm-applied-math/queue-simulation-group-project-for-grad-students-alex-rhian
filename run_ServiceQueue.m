@@ -7,7 +7,7 @@
 n_samples = 100;
 
 % Each sample is run up to a maximum time of 1000.
-max_time = 480;
+max_time = 1000;
 
 % Record how many customers are in the system at the end of each sample.
 NInSystemSamples = cell([1, n_samples]);
@@ -21,7 +21,7 @@ rng('default')
 % the log interval should be long enough for several arrival and departure
 % events happen.
 for sample_num = 1:n_samples
-    q = ServiceQueue(LogInterval=10);
+    q = ServiceQueue(LogInterval = 100);
     q.schedule_event(Arrival(1, Customer(1)));
     run_until(q, max_time);
     % Pull out samples of the number of customers in the queue system. Each
@@ -61,8 +61,7 @@ end
 figr = figure();
 tr = tiledlayout(figr, 1, 1);
 axr = nexttile(tr);
-hold(axr, "on");
-
+hold(axr, 'on');
 Rh = histogram(axr, R, Normalization = "probability", BinMethod = "auto");
 
 
@@ -73,12 +72,12 @@ Rh = histogram(axr, R, Normalization = "probability", BinMethod = "auto");
 fig1 = figure();
 t1 = tiledlayout(1,1);
 ax1 = nexttile(t1);
-h = histogram(ax1, NInSystem, Normalization="probability", BinMethod="integers");
-hold(ax1,'on')
+h = histogram(ax1, NInSystem, Normalization = "probability", BinMethod = "integers");
+hold(ax1,'on');
 
 theoryprob = [0.527169,0.351446,0.10041,0.01825,0.00243,0.00025];
 xvaluesshifted = [0,1,2,3,4,5];
-plot(ax1, xvaluesshifted,theoryprob,'o')
+plot(ax1, xvaluesshifted,theoryprob,'o');
 
 % MATLAB-ism: Once you've created a picture, you can use "hold on" to cause
 % further plotting function to work with the same picture rather than
@@ -121,7 +120,7 @@ TotalTime = [TotalTimeS,TotalTimeR];
 fig2 = figure();
 t2 = tiledlayout(fig2,1,1);
 ax2 = nexttile(t2);
-
+hold(ax2, 'on');
 time = histogram(ax2, TotalTime, Normalization = 'probability',BinMethod ='auto');
 
 
@@ -144,6 +143,7 @@ WaitTime = [WaitTimeS,WaitTimeR];
 fig3 = figure();
 t3 = tiledlayout(fig3,1,1);
 ax3 = nexttile(t3);
+hold(ax3, 'on');
 w = histogram(ax3,WaitTime, Normalization= 'probability', BinMethod= 'auto');
 
 
@@ -158,6 +158,7 @@ end
 fig4 = figure();
 t4 = tiledlayout(fig4,1,1);
 ax4 = nexttile(t4);
+hold(ax4, 'on');
 s = histogram(ax4, ServeTime, Normalization= 'probability', BinMethod= 'auto');
 
 

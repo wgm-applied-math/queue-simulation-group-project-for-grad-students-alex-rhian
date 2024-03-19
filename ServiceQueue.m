@@ -7,12 +7,12 @@ classdef ServiceQueue < handle
         % ArrivalRate - Customers arrive according to a Poisson process.
         % The inter-arrival time is exponentially distributed with a rate
         % parameter of ArrivalRate.
-        ArrivalRate = 2;
+        ArrivalRate = 1/30;
 
         % DepartureRate - When a customer arrives, the time it takes for
         % them to be served is exponentially distributed with a rate
         % parameter of DepartureRate.
-        DepartureRate = 3;
+        DepartureRate = 1/20;
 
         % NumServers - How many identical serving stations are available.
         NumServers = 1;
@@ -195,17 +195,13 @@ classdef ServiceQueue < handle
 
 
            % obj.Renegeing{end +1} = obj.RenegeTime;
-
-          
-            % The Customer is appended to the list of waiting customers.
-            obj.Waiting{end+1} = c;
         
 
             % People need to set their watch here to randomly go off when 
             % they will renege, this is exponentially distributed 
             % 1/theta = 4
 
-           RenegeTime = exprnd(4);
+             RenegeTime = exprnd(1/15);
            
 
             % The Customer is appended to the list of waiting customers.
@@ -245,7 +241,7 @@ classdef ServiceQueue < handle
             customer.DepartureTime = departure.Time;
 
             % Add this Customer object to the end of Served.
-            obj.Served{end+1} = customer;
+            obj.Served{end + 1} = customer;
             obj.Prob{end + 1} = 0;
 
             % Empty this service station and mark that it is available.
@@ -268,14 +264,14 @@ classdef ServiceQueue < handle
             %Here is where we figure out if a customer is in the queue or
             %if they are being served/have been served when their alarm
             %goes off.
-            
+       
          for i = 1:length(obj.Waiting)
              c = obj.Waiting{i};
-             if c.Id == renege.Id
+             if c.Id == renege.Id                 
                 obj.Waiting(i) = [];
                 obj.Renegeing{end + 1} = c;
                 obj.Prob{end + 1} = 1;
-                c.RenegeTime = renege.Time;          
+                c.RenegeTime = renege.Time;                     
                 break;
              end   
 
