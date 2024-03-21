@@ -7,7 +7,7 @@
 n_samples = 1000;
 
 % Each sample is run up to a maximum time of 1000.
-max_time = 8*60;
+max_time = 2000;
 
 % Record how many customers are in the system at the end of each sample.
 NInSystemSamples = cell([1, n_samples]);
@@ -58,7 +58,7 @@ tr = tiledlayout(figr, 1, 1);
 axr = nexttile(tr);
 hold(axr, 'on');
 Rh = histogram(axr, R, Normalization = "probability", BinMethod = "auto");
-
+title('Customers per 8-Hour Shift');
 
 % Start with a histogram.  The result is an empirical PDF, that is, the
 % area of the bar at horizontal index n is proportional to the fraction of
@@ -70,10 +70,12 @@ ax1 = nexttile(t1);
 h = histogram(ax1, NInSystem, Normalization = "probability", BinMethod = "integers");
 hold(ax1,'on');
 
+%{
 theoryprob = [0.527169,0.351446,0.10041,0.01825,0.00243,0.00025];
 xvaluesshifted = [0,1,2,3,4,5];
 plot(ax1, xvaluesshifted,theoryprob,'o');
-
+title('Number of Customers in System');
+%}
 % MATLAB-ism: Once you've created a picture, you can use "hold on" to cause
 % further plotting function to work with the same picture rather than
 % create a new one.
@@ -81,6 +83,7 @@ plot(ax1, xvaluesshifted,theoryprob,'o');
 % For comparison, plot the theoretical results for a M/M/1 queue.
 % The agreement isn't all that good unless you run for a long time, say
 % max_time = 10,000 units, and LogInterval is large, say 10.
+
 rho = q.ArrivalRate / q.DepartureRate;
 P0 = 1 - rho;
 nMax = 10;
@@ -102,7 +105,6 @@ plot(ax1, ns, P, 'o', MarkerEdgeColor='k', MarkerFaceColor='r');
 %TotalCustomers=length(q.Served)+length(q.Renegeing)
 
 TotalTimeS = zeros(1, length(q.Served));
-qlength = length(q.Prob);
 
 for n = 1:length(q.Served)
         TotalTimeS(1, n) = q.Served{1, n}.DepartureTime - q.Served{1, n}.ArrivalTime;
@@ -119,9 +121,10 @@ fig2 = figure();
 t2 = tiledlayout(fig2,1,1);
 ax2 = nexttile(t2);
 hold(ax2, 'on');
-time = histogram(ax2, TotalTime, Normalization = 'probability',BinMethod ='auto');
-
-
+time = histogram(ax2, TotalTime, Normalization = 'probability', BinWidth = 10);
+title('Time Spent in System');
+%plot(ax2, xline(18.6));
+%ylim([0, .35]);
 %Generate a hisogram for the time the customers spend waiting in the queue
 %BeginService-ArrivalTime
 
@@ -142,8 +145,10 @@ fig3 = figure();
 t3 = tiledlayout(fig3,1,1);
 ax3 = nexttile(t3);
 hold(ax3, 'on');
-w = histogram(ax3,WaitTime, Normalization= 'probability', BinMethod= 'auto');
-
+w = histogram(ax3, WaitTime, Normalization= 'probability',BinWidth = 5);
+title('Time Spent In Queue');
+%plot(ax3, xline(4.4));
+%ylim([0, .85]);
 
 %Generate a histogram for the time the customers spend being served 
 %DepartureTime-BeginServiceTime 
@@ -157,5 +162,7 @@ fig4 = figure();
 t4 = tiledlayout(fig4,1,1);
 ax4 = nexttile(t4);
 hold(ax4, 'on');
-s = histogram(ax4, ServeTime, Normalization= 'probability', BinMethod= 'auto');
-
+s = histogram(ax4, ServeTime,Normalization= 'probability', BinWidth = 10);
+title('Time Spent Being Served');
+%plot(ax4, xline(14.2));
+%ylim([0,.35]);
